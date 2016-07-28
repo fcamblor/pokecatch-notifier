@@ -3,6 +3,7 @@
 var restify = require('restify');
 var _ = require('lodash');
 var Store = require('./store');
+var Slack = require('./slack');
 
 var requiredEnvKeysFilled = true;
 _.each(['SLK_HOOK_URL', 'MNG_URL'], function (requiredEnvKey) {
@@ -15,6 +16,10 @@ if (!requiredEnvKeysFilled) {
     process.exit();
 }
 
+var slack = new Slack({
+    hook_url: process.env.SLK_HOOK_URL,
+    username: process.env.SLK_USERNAME || "Pokemon catcher"
+});
 var store = new Store({
     mongo_url: process.env.MNG_URL
 });
