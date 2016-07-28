@@ -129,6 +129,81 @@ class Store {
         });
     }
 
+    createAreaScan({ areaId, scanUntil }) {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                // Ensuring areaId is valid + no scan is already started for given area
+                db.collection('area').count({ _id: new ObjectID(areaId) })
+                    .then((count) => {
+                        if(!count) { return Promise.reject("No area found for id "+areaId); }
+
+                        return db.collection('area-scans').count({ areaId: new ObjectID(areaId) });
+                    }, rejectAndCloseDb)
+                    .then((count) => {
+                        if(count) { return Promise.reject("Area scan already exists !"); }
+
+                        return db.collection('area-scans').insertOne({
+                            areaId: new ObjectID(areaId),
+                            until: scanUntil
+                        });
+                    }, rejectAndCloseDb).then(({ insertedId }) => {
+                    resolve(insertedId.toString());
+                    db.close();
+                }, rejectAndCloseDb).catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
+    findAreaScanByAreaId({ areaId }) {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('area-scans').find({ areaId: new ObjectID(areaId) }).limit(1).next((err, areaScanItem) => {
+                    if(err) { rejectAndCloseDb(err); return; }
+
+                    resolve(areaScanItem);
+                    db.close();
+                });
+            }, reject);
+        });
+    }
+
+    listAreaScans() {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('area-scans').find().toArray().then((areaScans) => {
+                    resolve(areaScans);
+                    db.close();
+                }, rejectAndCloseDb).catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
+    deleteAreaScan({ areaScanId }) {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('area-scans').deleteOne({ _id: new ObjectID(areaScanId )})
+                    .then(() => {
+                        resolve();
+                        db.close();
+                    }, rejectAndCloseDb)
+                    .catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
+    purgeOutdatedAreaScans() {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('area-scans').deleteMany({ until: { $lt: Date.now() } })
+                    .then(() => {
+                        resolve();
+                        db.close();
+                    }, rejectAndCloseDb)
+                    .catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
     _inMongoConnectionDo(executionCallback, reject){
         if(!executionCallback) { throw new Error("Missing execution callback in _inMongoConnectionDo() call !"); }
         if(!reject) { throw new Error("Missing outer rejection promise in _inMongoConnectionDo() call !"); }
