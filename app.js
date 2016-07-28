@@ -4,6 +4,7 @@ var restify = require('restify');
 var _ = require('lodash');
 var Store = require('./store');
 var Slack = require('./slack');
+var Pokedex = require('./pokedex');
 
 var requiredEnvKeysFilled = true;
 _.each(['SLK_HOOK_URL', 'MNG_URL'], function (requiredEnvKey) {
@@ -23,6 +24,7 @@ var slack = new Slack({
 var store = new Store({
     mongo_url: process.env.MNG_URL
 });
+var pokedex = new Pokedex();
 
 var server = restify.createServer({
     name: 'pokecatch-slack-notifier',
@@ -56,6 +58,8 @@ server.del('/area/:id', (req, res, next) =>
     store.deleteAreaById(req.params.id).then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next })) 
 );
 
-server.listen(parseInt(process.env.PORT, 10) || 8080, function () {
-    console.log('%s listening at %s', server.name, server.url);
+pokedex.init().then(() => {
+    server.listen(parseInt(process.env.PORT, 10) || 8080, function () {
+        console.log('%s listening at %s', server.name, server.url);
+    });
 });
