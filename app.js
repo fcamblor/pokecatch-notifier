@@ -1,5 +1,8 @@
+"use strict";
+
 var restify = require('restify');
 var _ = require('lodash');
+var Store = require('./store');
 
 var requiredEnvKeysFilled = true;
 _.each(['SLK_HOOK_URL', 'MNG_URL'], function (requiredEnvKey) {
@@ -12,16 +15,42 @@ if (!requiredEnvKeysFilled) {
     process.exit();
 }
 
+var store = new Store({
+    mongo_url: process.env.MNG_URL
+});
+
 var server = restify.createServer({
     name: 'pokecatch-slack-notifier',
     version: '1.0.0'
 });
 
-console.log("Promise check ...", Promise, Promise.all);
-
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
-server.use(restify.bodyParser());
+server.use(restify.bodyParser({ mapParams: false }));
+
+let httpErrorHandlerFactory = ({res, next}) => (error) => {
+    console.error(error);
+    res.send(500, error);
+    next();
+};
+let httpSuccessHandlerFactory = ({ res, next, returnedContent = (arg1) => arg1, httpCode = 200 }) => {
+    return function() { // Using function here since arrow function doesn't have one !
+        let content = returnedContent.apply(null, arguments);
+        res.send(httpCode, content);
+        next();
+    };
+};
+
+server.get('/area', (req, res, next) => 
+    store.listArea().then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next })) 
+);
+server.post('/area',  (req, res, next) => 
+    store.createArea(req.body).then(httpSuccessHandlerFactory({ res, next, httpCode: 201, returnedContent: (id) => { return { id }; } }), httpErrorHandlerFactory({ res, next }))
+);
+server.del('/area/:id', (req, res, next) =>
+    store.deleteAreaById(req.params.id).then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next })) 
+);
+
 server.listen(parseInt(process.env.PORT, 10) || 8080, function () {
     console.log('%s listening at %s', server.name, server.url);
 });
