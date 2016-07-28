@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "lodash": "3.10.1",
+    "moment": "2.14.1",
     "mongodb": "2.1.18",
     "request": "2.72.0",
     "request-promise": "3.0.0",
