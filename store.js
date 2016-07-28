@@ -1,9 +1,9 @@
 "use strict";
 
-var MongoClient = require('mongodb').MongoClient;
-var ObjectID = require('mongodb').ObjectID;
-var assert = require('assert');
-var _ = require('lodash');
+let MongoClient = require('mongodb').MongoClient;
+let ObjectID = require('mongodb').ObjectID;
+let assert = require('assert');
+let _ = require('lodash');
 
 class Store {
     constructor({ mongo_url }) {

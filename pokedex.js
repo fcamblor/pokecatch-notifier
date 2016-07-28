@@ -1,6 +1,6 @@
 "use strict";
 
-var rp = require('request-promise');
+let rp = require('request-promise');
 
 class Pokedex {
     constructor() {
