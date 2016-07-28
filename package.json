@@ -10,5 +10,8 @@
     "request": "2.72.0",
     "request-promise": "3.0.0",
     "restify": "4.1.1"
+  },
+  "engines": {
+    "node": ">=6.0.0"
   }
 }
