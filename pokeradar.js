@@ -42,6 +42,18 @@ class PokeRadar {
         });
     }
     
+    resumeRadarScans() {
+        return new Promise((resolve, reject) => {
+            this.store.purgeOutdatedAreaScans()
+                .then(() => this.store.listAreaScans(), reject)
+                .then((areaScans) => Promise.all(
+                    areaScans.map( (areaScan) => this.startRadarForArea({ areaId: areaScan.areaId, duration: areaScan.until - Date.now(), skipAreaScanCreation: true }) )
+                ), reject)
+                .then(resolve, reject)
+                .catch(reject);
+        });
+    }
+    
     _handleFindNearbyPokemonsForAreaLocation({ area, locationIdx, autoScanNextLocations }) {
         return new Promise((resolve, reject) => {
             // First, we should ensure a valid area scan is still present in db

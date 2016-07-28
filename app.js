@@ -5,6 +5,7 @@ let _ = require('lodash');
 let Store = require('./store');
 let Slack = require('./slack');
 let Pokedex = require('./pokedex');
+let PokeRadar = require('./pokeradar');
 
 let requiredEnvKeysFilled = true;
 _.each(['SLK_HOOK_URL', 'MNG_URL'], function (requiredEnvKey) {
@@ -25,6 +26,7 @@ let store = new Store({
     mongo_url: process.env.MNG_URL
 });
 let pokedex = new Pokedex();
+let pokeradar = new PokeRadar({ store });
 
 let server = restify.createServer({
     name: 'pokecatch-slack-notifier',
@@ -58,8 +60,15 @@ server.del('/area/:id', (req, res, next) =>
     store.deleteAreaById(req.params.id).then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next })) 
 );
 
-pokedex.init().then(() => {
+Promise.all([
+    pokedex.init(),
+    pokeradar.resumeRadarScans()
+]).then(() => {
     server.listen(parseInt(process.env.PORT, 10) || 8080, function () {
         console.log('%s listening at %s', server.name, server.url);
     });
+}, Promise.reject)
+.catch((error) => {
+    console.error("Error happened during startup : ", error);
+    process.exit();
 });
