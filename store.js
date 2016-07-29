@@ -14,7 +14,6 @@ class Store {
         name,
         locations,
         notifications: {
-            lang = "fr", // either "en" or "fr"
             usernames = []
         }
     }) {
@@ -32,7 +31,6 @@ class Store {
                         name,
                         locations,
                         notifications: {
-                            lang,
                             usernames
                         }
                     });
@@ -49,7 +47,6 @@ class Store {
         name,
         locations,
         notifications: {
-            lang = "fr", // either "en" or "fr"
             usernames = []
         }
     }) {
@@ -67,7 +64,6 @@ class Store {
                         name,
                         locations,
                         notifications: {
-                            lang,
                             usernames
                         }
                     } });
@@ -216,6 +212,7 @@ class Store {
         name,
         timezone,
         notifications: {
+            lang = "fr", // either "en" or "fr"
             slackUsername,
             pokemonWhiteList, // Array of pokemon ids you're looking for
             pokemonBlackList // Array of pokemon ids you want to ignore notifications from
@@ -231,6 +228,7 @@ class Store {
                             name,
                             timezone,
                             notifications: {
+                                lang,
                                 slackUsername,
                                 pokemonWhiteList,
                                 pokemonBlackList
