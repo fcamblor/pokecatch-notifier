@@ -5,8 +5,9 @@ let moment = require('moment');
 let PokeSensor = require('./pokesensor');
 
 class PokeRadar {
-    constructor({ store }) {
+    constructor({ store, firebaseStore }) {
         this.store = store;
+        this.firebaseStore = firebaseStore;
         this.pokesensor = new PokeSensor();
     }
 
@@ -69,7 +70,8 @@ class PokeRadar {
                     return this.pokesensor.findPokemonsAround({ lat: area.locations[locationIdx], long: area.locations[locationIdx+1] });
                 }, reject)
                 .then((pokemons) => {
-                    // TODO: We may imagine to store pokemon results into firebase here someday...
+                    console.info("Found "+pokemons.length+" pokemon(s) at area "+area.name+"'s location "+locationIdx/2);
+                    this.firebaseStore.storePokemonStats({ pokemons, area });
 
                     resolve(pokemons);
 
@@ -78,6 +80,7 @@ class PokeRadar {
                         if(locationIdx+2 === area.locations.length) {
                             // Once we looped over every possible locations, delaying new loop
                             // during 60s...
+                            console.info("Waiting 1 minute after a location complete loop !...");
                             loopDelay += 60000;
                         }
                         setTimeout(() => this._handleFindNearbyPokemonsForAreaLocation({ area, locationIdx: (locationIdx+2)%area.locations.length, autoScanNextLocations }), loopDelay);

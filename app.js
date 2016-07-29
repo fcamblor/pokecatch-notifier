@@ -27,12 +27,12 @@ let pokedex = new Pokedex();
 let store = new Store({
     mongo_url: process.env.MNG_URL
 });
-let pokeradar = new PokeRadar({ store });
 let firebaseStore = new FirebaseStore({ 
     serviceAccount: JSON.parse(process.env.FB_CONFIG), 
     databaseUrl: process.env.FB_DATABASE_URL,
     pokedex
 });
+let pokeradar = new PokeRadar({ store, firebaseStore });
 
 let server = restify.createServer({
     name: 'pokecatch-slack-notifier',
