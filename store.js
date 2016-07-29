@@ -220,6 +220,82 @@ class Store {
         });
     }
 
+    createUser({
+        name,
+        notifications: {
+            slackUsername,
+            pokemonWhiteList, // Array of pokemon ids you're looking for
+            pokemonBlackList // Array of pokemon ids you want to ignore notifications from
+        }
+    }) {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('users').count({ name: name })
+                    .then((count) => {
+                        if(count) { return Promise.reject("User with name "+name+" already exists !"); }
+
+                        return db.collection('users').insertOne({
+                            name,
+                            notifications: {
+                                slackUsername,
+                                pokemonWhiteList,
+                                pokemonBlackList
+                            }
+                        });
+                    }, rejectAndCloseDb)
+                    .then(({ insertedId }) => {
+                        resolve(insertedId.toString());
+                        db.close();
+                    }, rejectAndCloseDb)
+                    .catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
+    updateUser({ userId, updatedFields }) {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('users').count({ _id: new ObjectID(userId) }).then((count) => {
+                    if(count === 0) { return Promise.reject("No user found for id : "+userId); }
+
+                    return db.collection('users').updateOne({ _id: new ObjectID(userId) }, { $set: updatedFields });
+                }, rejectAndCloseDb).then(({ insertedId }) => {
+
+                    resolve();
+                    db.close();
+                }, rejectAndCloseDb).catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
+    findAllUsers() {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('users').find().toArray()
+                    .then((users) => {
+
+                        resolve(users);
+                        db.close();
+                    }, rejectAndCloseDb)
+                    .catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
+    findUsersByNames({ usernames }) {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('users').find({ name: { $in: usernames } }).toArray()
+                    .then((users) => {
+
+                        resolve(users);
+                        db.close();
+                    }, rejectAndCloseDb)
+                    .catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
+
     _inMongoConnectionDo(executionCallback, reject){
         if(!executionCallback) { throw new Error("Missing execution callback in _inMongoConnectionDo() call !"); }
         if(!reject) { throw new Error("Missing outer rejection promise in _inMongoConnectionDo() call !"); }

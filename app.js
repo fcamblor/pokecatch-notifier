@@ -76,6 +76,12 @@ server.post('/area/:id/startScan',  (req, res, next) =>
 server.post('/area/:id/startNotifications', (req, res, next) =>
     firebaseStore.startAreaNotificationsForMissingPokemons({ areaId: req.params.id }).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
 );
+server.post('/users', (req, res, next) =>
+    store.createUser(req.body).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
+);
+server.put('/users/:id', (req, res, next) =>
+    store.updateUser({ userId: req.params.id, updatedFields: req.body }).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
+);
 server.post('/area/:id/stopNotifications', (req, res, next) =>
     firebaseStore.stopAreaNotificationsForMissingPokemons({ areaId: req.params.id }).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
 );
