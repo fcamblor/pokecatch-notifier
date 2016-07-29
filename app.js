@@ -61,8 +61,11 @@ let httpSuccessHandlerFactory = ({ res, next, returnedContent = (arg1) => arg1, 
 server.get('/area', (req, res, next) => 
     store.listArea().then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next })) 
 );
-server.post('/area',  (req, res, next) => 
+server.post('/area',  (req, res, next) =>
     store.createArea(req.body).then(httpSuccessHandlerFactory({ res, next, httpCode: 201, returnedContent: (id) => { return { id }; } }), httpErrorHandlerFactory({ res, next }))
+);
+server.put('/area/:id',  (req, res, next) =>
+    store.updateArea(req.params.id, req.body).then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next }))
 );
 server.del('/area/:id', (req, res, next) =>
     store.deleteAreaById(req.params.id).then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next })) 
