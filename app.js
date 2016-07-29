@@ -6,9 +6,10 @@ let Store = require('./store');
 let Slack = require('./slack');
 let Pokedex = require('./pokedex');
 let PokeRadar = require('./pokeradar');
+let FirebaseStore = require('./fbstore');
 
 let requiredEnvKeysFilled = true;
-_.each(['SLK_HOOK_URL', 'MNG_URL'], function (requiredEnvKey) {
+_.each(['SLK_HOOK_URL', 'MNG_URL', 'FB_CONFIG', 'FB_DATABASE_URL'], function (requiredEnvKey) {
     if (!process.env[requiredEnvKey]) {
         console.error("Missing mandatory environment key : %s", requiredEnvKey);
         requiredEnvKeysFilled = false;
@@ -22,11 +23,16 @@ let slack = new Slack({
     hook_url: process.env.SLK_HOOK_URL,
     username: process.env.SLK_USERNAME || "Pokemon catcher"
 });
+let pokedex = new Pokedex();
 let store = new Store({
     mongo_url: process.env.MNG_URL
 });
-let pokedex = new Pokedex();
 let pokeradar = new PokeRadar({ store });
+let firebaseStore = new FirebaseStore({ 
+    serviceAccount: JSON.parse(process.env.FB_CONFIG), 
+    databaseUrl: process.env.FB_DATABASE_URL,
+    pokedex
+});
 
 let server = restify.createServer({
     name: 'pokecatch-slack-notifier',
@@ -62,6 +68,7 @@ server.del('/area/:id', (req, res, next) =>
 
 Promise.all([
     pokedex.init(),
+    firebaseStore.init(),
     pokeradar.resumeRadarScans()
 ]).then(() => {
     server.listen(parseInt(process.env.PORT, 10) || 8080, function () {

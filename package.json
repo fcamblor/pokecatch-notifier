@@ -5,6 +5,7 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "firebase": "3.2.1",
     "lodash": "3.10.1",
     "moment": "2.14.1",
     "mongodb": "2.1.18",
