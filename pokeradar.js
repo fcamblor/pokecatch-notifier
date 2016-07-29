@@ -66,6 +66,7 @@ class PokeRadar {
                 .then((areaScan) => {
                     if(moment(areaScan.until).isBefore()) {
                         this.store.deleteAreaScan({ areaScanId: areaScan._id.toString() });
+                        this.firebaseStore.stopAreaNotificationsForMissingPokemons({ areaId: area._id.toString() });
                         console.info("Outdated area scan => Stopping scan !");
                         return Promise.reject("Outdated area scan !");
                     }

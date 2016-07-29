@@ -73,7 +73,10 @@ server.post('/area/:id/startScan',  (req, res, next) =>
 server.post('/area/:id/startNotifications', (req, res, next) =>
     firebaseStore.startAreaNotificationsForMissingPokemons({ areaId: req.params.id }).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
 );
-server.get('/ping', (req, res, next) => httpSuccessHandlerFactory({ res, next, returnedContent: () => "OK" })() )
+server.post('/area/:id/stopNotifications', (req, res, next) =>
+    firebaseStore.stopAreaNotificationsForMissingPokemons({ areaId: req.params.id }).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
+);
+server.get('/ping', (req, res, next) => httpSuccessHandlerFactory({ res, next, returnedContent: () => "OK" })() );
 
 Promise.all([
     pokedex.init(),

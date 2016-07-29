@@ -124,6 +124,22 @@ class FirebaseStore {
                 .catch(reject);
         });
     }
+
+    stopAreaNotificationsForMissingPokemons({ areaId }) {
+        return new Promise((resolve, reject) => {
+            this.store.findAreaById({areaId})
+                .then((area) => {
+                    this.fb.database().ref("stats/byArea/" + area.name + "/pokemons/").off('child_added');
+                    this.store.findAreaScanByAreaId({ areaId }).then((areaScan) => {
+                        this.store.updateAreaScan({ areaScanId: areaScan._id.toString(), updatedFields: {
+                            notificationsStarted: false
+                        }});
+                    });
+                    resolve();
+                }, reject)
+                .catch(reject);
+        });
+    }
 }
 
 
