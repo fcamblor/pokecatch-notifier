@@ -13,7 +13,7 @@ class PokeRadar {
 
     startRadarForArea({ areaId, duration = 10 * 60 * 1000, skipAreaScanCreation = false }) {
         return new Promise((resolve, reject) => {
-            let scanUntil = Date.now() + duration;
+            let scanUntil = Date.now() + Number(duration);
             let context = {
                 area: null,
                 areaScanId: null

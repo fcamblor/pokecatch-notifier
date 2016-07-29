@@ -65,6 +65,9 @@ server.post('/area',  (req, res, next) =>
 server.del('/area/:id', (req, res, next) =>
     store.deleteAreaById(req.params.id).then(httpSuccessHandlerFactory({ res, next }), httpErrorHandlerFactory({ res, next })) 
 );
+server.post('/area/:id/startScan',  (req, res, next) =>
+    pokeradar.startRadarForArea({ areaId: req.params.id, duration: req.params.duration}).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
+);
 
 Promise.all([
     pokedex.init(),
