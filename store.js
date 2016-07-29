@@ -214,6 +214,7 @@ class Store {
 
     createUser({
         name,
+        timezone,
         notifications: {
             slackUsername,
             pokemonWhiteList, // Array of pokemon ids you're looking for
@@ -228,6 +229,7 @@ class Store {
 
                         return db.collection('users').insertOne({
                             name,
+                            timezone,
                             notifications: {
                                 slackUsername,
                                 pokemonWhiteList,

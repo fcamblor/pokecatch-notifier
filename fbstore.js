@@ -3,7 +3,7 @@
 let assert = require('assert');
 let firebase = require('firebase');
 let _ = require('lodash');
-let moment = require('moment');
+let moment = require('moment-timezone');
 
 class FirebaseStore {
     constructor({ serviceAccount, databaseUrl, pokedex, slack, store }){
@@ -20,8 +20,8 @@ class FirebaseStore {
             return result;
         };
         this.i18nMessages = {
-            fr: (area, pokemon, lang) => withMomentLocale(lang, () => "Un nouveau *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* est disponible dans la zone *"+area.name+"* et tu ne le possède pas encore. Attrape-le vite ou il disparaîtra à *"+moment(pokemon.exp*1000).format("HH:mm")+" ("+moment(pokemon.exp*1000).fromNow()+")* !"),
-            en: (area, pokemon, lang) => withMomentLocale(lang, () => "A new *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* is available in *"+area.name+"* area and you don't own it yet. Catch it quickly, or it will disappear at *"+moment(pokemon.exp*1000).format("HH:mm")+"("+moment(pokemon.exp*1000).locale(lang).fromNow()+")* !")
+            fr: (area, pokemon, lang, user) => withMomentLocale(lang, () => "Un nouveau *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* est disponible dans la zone *"+area.name+"* et tu ne le possède pas encore. Attrape-le vite ou il disparaîtra à *"+moment(pokemon.exp*1000).tz(user.timezone).format("HH:mm")+" ("+moment(pokemon.exp*1000).fromNow()+")* !"),
+            en: (area, pokemon, lang, user) => withMomentLocale(lang, () => "A new *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* is available in *"+area.name+"* area and you don't own it yet. Catch it quickly, or it will disappear at *"+moment(pokemon.exp*1000).tz(user.timezone).format("HH:mm")+"("+moment(pokemon.exp*1000).locale(lang).fromNow()+")* !")
         };
     }
 
@@ -127,7 +127,7 @@ class FirebaseStore {
                         }).map((user) => {
                             console.log("New pokemon not owned yet by "+user.name+" detected : "+pokemon.pName);
                             return this.slack.sendMessage({
-                                message: this.i18nMessages[area.notifications.lang](area, pokemon, area.notifications.lang),
+                                message: this.i18nMessages[area.notifications.lang](area, pokemon, area.notifications.lang, user),
                                 channel: "@"+user.notifications.slackUsername,
                                 icon_url: "http://pokeapi.co/media/sprites/pokemon/"+pokemon.pid+".png"
                             });
