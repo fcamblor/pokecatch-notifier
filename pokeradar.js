@@ -2,6 +2,7 @@
 
 let rp = require('request-promise');
 let moment = require('moment');
+let _ = require('lodash');
 let PokeSensor = require('./pokesensor');
 
 class PokeRadar {
@@ -48,7 +49,10 @@ class PokeRadar {
             this.store.purgeOutdatedAreaScans()
                 .then(() => this.store.listAreaScans(), reject)
                 .then((areaScans) => Promise.all(
-                    areaScans.map( (areaScan) => this.startRadarForArea({ areaId: areaScan.areaId, duration: areaScan.until - Date.now(), skipAreaScanCreation: true }) )
+                    _.flatten(
+                        areaScans.map( (areaScan) => this.startRadarForArea({ areaId: areaScan.areaId, duration: areaScan.until - Date.now(), skipAreaScanCreation: true }) ),
+                        areaScans.filter( (areaScan) => areaScan.notificationsStarted).map( (areaScan) => this.firebaseStore.startAreaNotificationsForMissingPokemons({ areaId: areaScan.areaId.toString(), skipAlreadyStarted: true }) )
+                    )
                 ), reject)
                 .then(resolve, reject)
                 .catch(reject);

@@ -153,6 +153,22 @@ class Store {
             }, reject);
         });
     }
+    
+    updateAreaScan({ areaScanId, updatedFields }) {
+        return new Promise((resolve, reject) => {
+            this._inMongoConnectionDo((db, rejectAndCloseDb) => {
+                db.collection('area-scans').count({ _id: new ObjectID(areaScanId) }).then((count) => {
+                    if(count === 0) { return Promise.reject("No area scan found for id : "+areaScanId); }
+
+                    return db.collection('area-scans').updateOne({ _id: new ObjectID(areaScanId) }, { $set: updatedFields });
+                }, rejectAndCloseDb).then(({ insertedId }) => {
+
+                    resolve();
+                    db.close();
+                }, rejectAndCloseDb).catch(rejectAndCloseDb);
+            }, reject);
+        });
+    }
 
     findAreaScanByAreaId({ areaId }) {
         return new Promise((resolve, reject) => {

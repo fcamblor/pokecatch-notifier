@@ -69,24 +69,45 @@ class FirebaseStore {
         });
     }
 
-    startAreaNotificationsForMissingPokemons({ areaId }) {
+    startAreaNotificationsForMissingPokemons({ areaId, skipAlreadyStarted = false }) {
         return new Promise((resolve, reject) => {
+            let context = { 
+                firstTime: true,
+                area: null
+            };
+            
             this.store.findAreaById({ areaId })
                 .then((area) => {
-                    let context = { firstTime: true };
+                    context.area = area;
+                    
+                    return this.store.findAreaScanByAreaId({areaId});
+                }, reject)
+                .then((areaScan) => {
 
-                    this.fb.database().ref("stats/byArea/"+area.name+"/pokemons/").on('child_added', (pokemonSnapshot) => {
+                    if (areaScan.notificationsStarted && !skipAlreadyStarted) {
+                        return Promise.reject("Area notifications already started for area " + areaId);
+                    }
+
+                    return this.store.updateAreaScan({
+                        areaScanId: areaScan._id.toString(), updatedFields: {
+                            notificationsStarted: true
+                        }
+                    });
+                }, reject)
+                .then(() => {
+                    
+                    this.fb.database().ref("stats/byArea/"+context.area.name+"/pokemons/").on('child_added', (pokemonSnapshot) => {
                         if(context.firstTime) {
                             // Do nothing
                         } else {
                             let pokemon = pokemonSnapshot.val();
-                            if((area.notifications.pokemonWhiteList && area.notifications.pokemonWhiteList.indexOf(pokemon.pid)!==-1)
-                                || (area.notifications.pokemonBlackList && area.notifications.pokemonBlackList.indexOf(pokemon.pid)===-1)) {
+                            if((context.area.notifications.pokemonWhiteList && context.area.notifications.pokemonWhiteList.indexOf(pokemon.pid)!==-1)
+                                || (context.area.notifications.pokemonBlackList && context.area.notifications.pokemonBlackList.indexOf(pokemon.pid)===-1)) {
 
                                 console.log("New pokemon not owned yet detected : "+pokemon.pName);
                                 this.slack.sendMessage({ 
-                                    message: this.i18nMessages[area.notifications.lang](area, pokemon, area.notifications.lang),
-                                    channel: area.notifications.slackChannel,
+                                    message: this.i18nMessages[context.area.notifications.lang](context.area, pokemon, context.area.notifications.lang),
+                                    channel: context.area.notifications.slackChannel,
                                     icon_url: "http://pokeapi.co/media/sprites/pokemon/"+pokemon.pid+".png"
                                 });
                             }
