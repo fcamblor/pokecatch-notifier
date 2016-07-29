@@ -13,9 +13,15 @@ class FirebaseStore {
         this.slack = slack;
         this.store = store;
 
+        let withMomentLocale = (lang, callback) => {
+            moment.locale(lang);
+            let result = callback();
+            moment.locale();
+            return result;
+        };
         this.i18nMessages = {
-            fr: (area, pokemon) => "Un nouveau *"+this.pokedex.pokemonName(pokemon.pid, area.notifications.lang)+"* est disponible dans la zone et tu ne le possède pas encore. Attrape-le vite ou il disparaîtra *"+moment(pokemon.exp*1000).fromNow()+"* !",
-            en: (area, pokemon) => "A new *"+this.pokedex.pokemonName(pokemon.pid, area.notifications.lang)+"* is available in your area and you don't own it yet. Catch it quickly, or it will disappear *"+moment(pokemon.exp*1000).fromNow()+"* !"
+            fr: (area, pokemon, lang) => withMomentLocale(lang, () => "Un nouveau *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* est disponible dans la zone et tu ne le possède pas encore. Attrape-le vite ou il disparaîtra à *"+moment(pokemon.exp*1000).format("HH:mm")+" ("+moment(pokemon.exp*1000).fromNow()+")* !"),
+            en: (area, pokemon, lang) => withMomentLocale(lang, () => "A new *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* is available in your area and you don't own it yet. Catch it quickly, or it will disappear at *"+moment(pokemon.exp*1000).format("HH:mm")+"("+moment(pokemon.exp*1000).locale(lang).fromNow()+")* !")
         };
     }
 
@@ -79,7 +85,7 @@ class FirebaseStore {
 
                                 console.log("New pokemon not owned yet detected : "+pokemon.pName);
                                 this.slack.sendMessage({ 
-                                    message: this.i18nMessages[area.notifications.lang](area, pokemon),
+                                    message: this.i18nMessages[area.notifications.lang](area, pokemon, area.notifications.lang),
                                     channel: area.notifications.slackChannel,
                                     icon_url: "http://pokeapi.co/media/sprites/pokemon/"+pokemon.pid+".png"
                                 });
