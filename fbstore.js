@@ -20,8 +20,8 @@ class FirebaseStore {
             return result;
         };
         this.i18nMessages = {
-            fr: (area, pokemon, lang) => withMomentLocale(lang, () => "Un nouveau *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* est disponible dans la zone et tu ne le possède pas encore. Attrape-le vite ou il disparaîtra à *"+moment(pokemon.exp*1000).format("HH:mm")+" ("+moment(pokemon.exp*1000).fromNow()+")* !"),
-            en: (area, pokemon, lang) => withMomentLocale(lang, () => "A new *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* is available in your area and you don't own it yet. Catch it quickly, or it will disappear at *"+moment(pokemon.exp*1000).format("HH:mm")+"("+moment(pokemon.exp*1000).locale(lang).fromNow()+")* !")
+            fr: (area, pokemon, lang) => withMomentLocale(lang, () => "Un nouveau *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* est disponible dans la zone *"+area.name+"* et tu ne le possède pas encore. Attrape-le vite ou il disparaîtra à *"+moment(pokemon.exp*1000).format("HH:mm")+" ("+moment(pokemon.exp*1000).fromNow()+")* !"),
+            en: (area, pokemon, lang) => withMomentLocale(lang, () => "A new *"+this.pokedex.pokemonName(pokemon.pid, lang)+"* is available in *"+area.name+"* area and you don't own it yet. Catch it quickly, or it will disappear at *"+moment(pokemon.exp*1000).format("HH:mm")+"("+moment(pokemon.exp*1000).locale(lang).fromNow()+")* !")
         };
     }
 
@@ -101,16 +101,7 @@ class FirebaseStore {
                             // Do nothing
                         } else {
                             let pokemon = pokemonSnapshot.val();
-                            if((context.area.notifications.pokemonWhiteList && context.area.notifications.pokemonWhiteList.indexOf(pokemon.pid)!==-1)
-                                || (context.area.notifications.pokemonBlackList && context.area.notifications.pokemonBlackList.indexOf(pokemon.pid)===-1)) {
-
-                                console.log("New pokemon not owned yet detected : "+pokemon.pName);
-                                this.slack.sendMessage({ 
-                                    message: this.i18nMessages[context.area.notifications.lang](context.area, pokemon, context.area.notifications.lang),
-                                    channel: context.area.notifications.slackChannel,
-                                    icon_url: "http://pokeapi.co/media/sprites/pokemon/"+pokemon.pid+".png"
-                                });
-                            }
+                            this._notifyUsers({ usernames: context.area.notifications.usernames, pokemon, area: context.area });
                         }
                     });
 
@@ -122,6 +113,28 @@ class FirebaseStore {
 
                 }, reject)
                 .catch(reject);
+        });
+    }
+
+    _notifyUsers({ usernames, pokemon, area }) {
+        return new Promise((resolve, reject) => {
+            this.store.findUsersByNames({ usernames })
+                .then((users) => {
+                    return Promise.all(
+                        users.filter((user) => {
+                            return ((user.notifications.pokemonWhiteList && user.notifications.pokemonWhiteList.indexOf(pokemon.pid)!==-1)
+                            || (user.notifications.pokemonBlackList && user.notifications.pokemonBlackList.indexOf(pokemon.pid)===-1));
+                        }).map((user) => {
+                            console.log("New pokemon not owned yet by "+user.name+" detected : "+pokemon.pName);
+                            return this.slack.sendMessage({
+                                message: this.i18nMessages[area.notifications.lang](area, pokemon, area.notifications.lang),
+                                channel: "@"+user.notifications.slackUsername,
+                                icon_url: "http://pokeapi.co/media/sprites/pokemon/"+pokemon.pid+".png"
+                            });
+                        })
+                    ).then(resolve, reject)
+                    .catch(reject);
+                });
         });
     }
 

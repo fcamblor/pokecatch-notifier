@@ -15,9 +15,7 @@ class Store {
         locations,
         notifications: {
             lang = "fr", // either "en" or "fr"
-            slackChannel = "#missing-pokemons-in-"+name,
-            pokemonWhiteList, // Array of pokemon ids you're looking for
-            pokemonBlackList // Array of pokemon ids you want to ignore notifications from
+            usernames = []
         }
     }) {
         return new Promise((resolve, reject) => {
@@ -31,13 +29,11 @@ class Store {
                     if(count) { return Promise.reject("Area already exists with name : "+name); }
 
                     return db.collection('area').insertOne({
-                        lang,
                         name,
                         locations,
                         notifications: {
-                            slackChannel,
-                            pokemonWhiteList,
-                            pokemonBlackList
+                            lang,
+                            usernames
                         }
                     });
                 }, rejectAndCloseDb).then(({ insertedId }) => {
@@ -50,13 +46,11 @@ class Store {
     }
 
     updateArea(areaId, {
-        lang = "fr", // either "en" or "fr"
         name,
         locations,
         notifications: {
-            slackChannel = "#missing-pokemons-in-"+name,
-            pokemonWhiteList, // Array of pokemon ids you're looking for
-            pokemonBlackList // Array of pokemon ids you want to ignore notifications from
+            lang = "fr", // either "en" or "fr"
+            usernames = []
         }
     }) {
         return new Promise((resolve, reject) => {
@@ -70,13 +64,11 @@ class Store {
                     if(count === 0) { return Promise.reject("No area found for id : "+areaId); }
 
                     return db.collection('area').updateOne({ _id: new ObjectID(areaId) }, { $set: {
-                        lang,
                         name,
                         locations,
                         notifications: {
-                            slackChannel,
-                            pokemonWhiteList,
-                            pokemonBlackList
+                            lang,
+                            usernames
                         }
                     } });
                 }, rejectAndCloseDb).then(({ insertedId }) => {
