@@ -30,7 +30,9 @@ let store = new Store({
 let firebaseStore = new FirebaseStore({ 
     serviceAccount: JSON.parse(process.env.FB_CONFIG), 
     databaseUrl: process.env.FB_DATABASE_URL,
-    pokedex
+    pokedex,
+    slack,
+    store
 });
 let pokeradar = new PokeRadar({ store, firebaseStore });
 
@@ -67,6 +69,9 @@ server.del('/area/:id', (req, res, next) =>
 );
 server.post('/area/:id/startScan',  (req, res, next) =>
     pokeradar.startRadarForArea({ areaId: req.params.id, duration: req.params.duration}).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
+);
+server.post('/area/:id/startNotifications', (req, res, next) =>
+    firebaseStore.startAreaNotificationsForMissingPokemons({ areaId: req.params.id }).then(httpSuccessHandlerFactory({ res, next}), httpErrorHandlerFactory({ res, next }))
 );
 server.get('/ping', (req, res, next) => httpSuccessHandlerFactory({ res, next, returnedContent: () => "OK" })() )
 

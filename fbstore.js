@@ -6,10 +6,17 @@ let _ = require('lodash');
 let moment = require('moment');
 
 class FirebaseStore {
-    constructor({ serviceAccount, databaseUrl, pokedex }){
+    constructor({ serviceAccount, databaseUrl, pokedex, slack, store }){
         this.serviceAccount = serviceAccount;
         this.databaseUrl = databaseUrl;
         this.pokedex = pokedex;
+        this.slack = slack;
+        this.store = store;
+
+        this.i18nMessages = {
+            fr: (area, pokemon) => "Un nouveau *"+this.pokedex.pokemonName(pokemon.pid, area.notifications.lang)+"* est disponible dans la zone et tu ne le possède pas encore. Attrape-le vite ou il disparaîtra *"+moment(pokemon.exp*1000).fromNow()+"* !",
+            en: (area, pokemon) => "A new *"+this.pokedex.pokemonName(pokemon.pid, area.notifications.lang)+"* is available in your area and you don't own it yet. Catch it quickly, or it will disappear *"+moment(pokemon.exp*1000).fromNow()+"* !"
+        };
     }
 
     init(){
@@ -55,6 +62,42 @@ class FirebaseStore {
             ).then(resolve, reject);
         });
     }
+
+    startAreaNotificationsForMissingPokemons({ areaId }) {
+        return new Promise((resolve, reject) => {
+            this.store.findAreaById({ areaId })
+                .then((area) => {
+                    let context = { firstTime: true };
+
+                    this.fb.database().ref("stats/byArea/"+area.name+"/pokemons/").on('child_added', (pokemonSnapshot) => {
+                        if(context.firstTime) {
+                            // Do nothing
+                        } else {
+                            let pokemon = pokemonSnapshot.val();
+                            if((area.notifications.pokemonWhiteList && area.notifications.pokemonWhiteList.indexOf(pokemon.pid)!==-1)
+                                || (area.notifications.pokemonBlackList && area.notifications.pokemonBlackList.indexOf(pokemon.pid)===-1)) {
+
+                                console.log("New pokemon not owned yet detected : "+pokemon.pName);
+                                this.slack.sendMessage({ 
+                                    message: this.i18nMessages[area.notifications.lang](area, pokemon),
+                                    channel: area.notifications.slackChannel,
+                                    icon_url: "http://pokeapi.co/media/sprites/pokemon/"+pokemon.pid+".png"
+                                });
+                            }
+                        }
+                    });
+
+                    // First time we call the on('child_added'), callback is instantly called with initialization node
+                    setTimeout(function(){
+                        context.firstTime = !context.firstTime;
+                        resolve();
+                    }, 1000);
+
+                }, reject)
+                .catch(reject);
+        });
+    }
 }
+
 
 module.exports = FirebaseStore;
