@@ -120,3 +120,5 @@ and call the `/stopNotifications` as well to stop it.
 By doing this, everytime a pokemon is detected on a location, we will retrieve area's notified users informations, and 
 particularly his pokemon's white/black list : if the user is interested by the Pokemon which just popped, a Slack 
 notification direct message will be sent to him.
+
+![Slack notification screenshot](screenshots/Slack Notifications.png
