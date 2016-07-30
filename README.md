@@ -101,16 +101,20 @@ curl -X POST -H "Content-Type: application/json" -d '{
 ```
 
 Once the area is created, remember its token since it will be very useful for upcoming commands.
+Also, as an important point, you can notice that users who will be concerned by notifications are defined directly into the area.
 
-Now, we will start scanning the area for Pokemons. For doing this, simply call the following request :
+Now, we will start scanning the area for Pokemons. For doing this, simply call following request :
 ```
 curl -X POST -H "Content-Type: application/json" "http://localhost:8080/area/1234567890abcde/startScan?duration=3600000
 ```
 where `1234567890abcde` is your area's token, and you want to scan this area during 1h (3600000ms).
 By default, if you don't put any `duration`, the default is 10 minutes.
 Once done, the app will start looping over every area's locations and scan for pokemon around these locations, one by one,
-using the [pokevision](www.pokevision.com) website (big thanks to them !), meaning if you go to www.pokevision.com after
+using the [pokevision](www.pokevision.com) API (big thanks to them !), meaning if you go to www.pokevision.com after
 having started the scanning process, you will see the pokemons on the map without having to click the "scan" button.
+
+Worth noting : if you put some long duration (greater than 20 minutes), you will need to setup a cron job which will regularly ping your heroku instance, otherwise it will be shut down (for hibernation) when he won't receive any http request for a long time.
+SaaS like [crondash](http://crondash.com/) provide such feature, and a dedicated `/ping` endpoint exist into the application for this purpose.
 
 
 Now, once the scan process is started, if you want to be notified on Slack, you will need to call following request :
