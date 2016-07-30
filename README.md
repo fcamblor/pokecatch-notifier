@@ -24,7 +24,8 @@ You will have to define following NodeJS environment variables :
     Then, you will need to export this key through a JSON file. Content of this JSON file should be one-lined then
     copy/pasted into `FB_CONFIG` variable.
     Content should look like this (don't forget it should be one-linked !) :
-    ```
+    ```json
+
     {
       "type": "service_account",
       "project_id": "XXXXXX",
@@ -37,6 +38,7 @@ You will have to define following NodeJS environment variables :
       "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
       "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/XXXX%40XXXX.iam.gserviceaccount.com"
     }
+
     ```
   - FB_DATABASE_URL : Your firebase root database url. Something like `https://XXXX.firebaseio.com`
   
