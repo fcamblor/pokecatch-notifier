@@ -1,3 +1,5 @@
+**_Currently, the notifier is not working anymore since Pokevision's [announcing their shutdown by July 31st](https://twitter.com/PokeVisionGo/status/759894659485143040). To workaround this, we may replace their API calls to https://pgorelease.nianticlabs.com/plfe/rpc API calls (but this needs to spend some more time on the topic, and I'm not having this spare time at the moment :()_**
+
 # Pokecatch-notifier
 
 NodeJS application intended to notify `Incoming WebHooks` slack bot everytime a new pokemon not owned pops in a
